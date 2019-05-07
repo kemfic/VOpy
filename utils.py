@@ -54,3 +54,6 @@ def match_frames(des1, des2, pt1, pt2):
   des_idxs = np.array(des_idxs)
 
   return des_idxs
+
+def coords_to_kp(coords):
+  return [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=15) for f in coords]
