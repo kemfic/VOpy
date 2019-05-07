@@ -10,7 +10,7 @@ class Frame(object):
     self.coords, self.des = get_features_orb(self.img, self.coords)
 
   def match_frames(self, prev):
-    MIN_DISPLACE = 10
+    MIN_DISPLACE = 0
     kp1 = self.coords
     kp2 = prev.coords
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
@@ -21,7 +21,7 @@ class Frame(object):
     good = []
     des_idxs = []
     for m, n in matches:
-      if m.distance < 0.75*n.distance and MIN_DISPLACE < np.linalg.norm(np.subtract(kp2[m.trainIdx], kp1[m.queryIdx])) < 300: #m.distance < 32
+      if (m.distance < 0.75*n.distance and MIN_DISPLACE < np.linalg.norm(np.subtract(kp2[m.trainIdx], kp1[m.queryIdx])) < 200): #m.distance < 32
         good.append(m.trainIdx)
         des_idxs.append((m.queryIdx, m.trainIdx))
     print(len(des_idxs))
