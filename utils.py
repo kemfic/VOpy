@@ -30,7 +30,6 @@ def get_features_orb(img, corners):
   # Convert Keypoint to coord
   coords = np.array([kp.pt for kp in kps])
   
-  print(kps[1].pt)
   return coords, des
 
 def match_frames(des1, des2, pt1, pt2):
