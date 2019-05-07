@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from frame import Frame
-
+from viewer import Viewer3D
 class SimpleVO(object):
   def __init__(self, img, K=None):
 
@@ -47,12 +47,15 @@ if __name__ == "__main__":
   cap = cv2.VideoCapture('vid/06.mp4')
   ret, frame = cap.read()
   vo = SimpleVO(frame)
+  viewer = Viewer3D()
+
   while cap.isOpened():
     ret, frame = cap.read()
-    
     vo.update(frame)
-
     cv2.imshow("frame", vo.annotate_frames())
+    
+    if cap.get(cv2.CAP_PROP_POS_FRAMES) > 2:
+      viewer.update(vo)
     vo.prevFrame = vo.curFrame
     if cv2.waitKey(1) & 0xFF == ord('q'):
       print("exiting...")
