@@ -26,7 +26,7 @@ if __name__ == "__main__":
     corners = getCorners(frame)
     print(corners[0])
     
-    [cv2.circle(frame, tuple(i.ravel()), 3, 255, -1) for i in corners]
+    [cv2.circle(frame, tuple(i.ravel()), 2, (0,255,0)) for i in corners]
 
     cv2.imshow("frame", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
