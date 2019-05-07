@@ -2,37 +2,58 @@ import cv2
 import numpy as np
 from frame import Frame
 
-def annotate_frames(a, b):
-  """
-  a is current frame
-  b is prev frame
-  """
+class SimpleVO(object):
+  def __init__(self, img, K=None):
 
-  out = np.copy(a.img)
-  old_coords = b.coords
+    self.poses = []
 
-  [cv2.line(out, tuple(np.int0(a.coords[i_a])), tuple(np.int0(b.coords[i_b])), (255, 0, 255), 1) for i_a, i_b in a.des_idxs]
+    self.focal = 1000
+    if K is not None:
+      self.K = np.array(K)
+    else:
+      self.K = np.array([
+        [self.focal, 0, img.shape[1]//2],
+        [0, self.focal, img.shape[0]//2],
+        [0, 0, 1]])
 
-  [cv2.circle(out, tuple(np.int0(a.coords[i_a])), 2,(0,255,0)) for i_a, i_b in a.des_idxs]
-  return out
+    self.prevFrame = Frame(img)
+    self.curFrame = Frame(img)
+    self.poses.append(self.curFrame.Rt)
+
+  def update(self, img):
+    self.curFrame = Frame(img)
+    self.curFrame.match_frames(self.prevFrame)
+    self.curFrame.get_essential_matrix(self.prevFrame)
+    self.curFrame.get_Rt(self.prevFrame)
+    self.poses.append(self.curFrame.Rt)
+    #self.prevFrame = self.curFrame
+
+  def annotate_frames(self):
+    """
+    a is current frame
+    b is prev frame
+    """
+    a = self.curFrame
+    b = self.prevFrame
+    out = np.copy(a.img)
+    old_coords = b.coords
+    
+    [cv2.line(out, tuple(np.int0(a.coords[i_a])), tuple(np.int0(b.coords[i_b])), (255, 0, 255), 1) for i_a, i_b in a.des_idxs]
+
+    [cv2.circle(out, tuple(np.int0(a.coords[i_a])), 2,(0,255,0)) for i_a, i_b in a.des_idxs]
+    return out
 
 if __name__ == "__main__":
   cap = cv2.VideoCapture('vid/06.mp4')
   ret, frame = cap.read()
-  prevFrame = Frame(frame)
+  vo = SimpleVO(frame)
   while cap.isOpened():
     ret, frame = cap.read()
     
-    # Visual Odom Stuff Here
-    curFrame = Frame(frame)
-    curFrame.match_frames(prevFrame)
+    vo.update(frame)
 
-    
-    
-    
-    cv2.imshow("frame", annotate_frames(curFrame, prevFrame))
-    prevFrame = curFrame
-    
+    cv2.imshow("frame", vo.annotate_frames())
+    vo.prevFrame = vo.curFrame
     if cv2.waitKey(1) & 0xFF == ord('q'):
       print("exiting...")
       break
