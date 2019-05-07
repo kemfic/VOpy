@@ -30,7 +30,7 @@ class Frame(object):
       if (m.distance < 0.75*n.distance and MIN_DISPLACE < np.linalg.norm(np.subtract(kp2[m.trainIdx], kp1[m.queryIdx])) < 200): #m.distance < 32
         good.append(m.trainIdx)
         des_idxs.append((m.queryIdx, m.trainIdx))
-    print(len(des_idxs))
+    #print(len(des_idxs))
     self.des_idxs = np.array(des_idxs)
     self.kp1 = kp1
 
@@ -66,4 +66,4 @@ class Frame(object):
     Rt[:3, :3] = R
     Rt[:3, 3] = np.squeeze(t)
     self.Rt = prev.Rt.dot(Rt)
-    print(self.Rt)
+    #print(self.Rt)
