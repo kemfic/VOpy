@@ -32,8 +32,31 @@ def get_features_orb(img, corners):
   print(kps[1].pt)
   return coords, des
 
-def getMatches(im1, im2, corner1, corner2):
-  return NotImplemented
+def match_frames(des1, des2, pt1, pt2):
+  '''
+  Matches features using K-Nearest Neighbors, and returns the indexes of the matches
+  '''
+
+  kp1 = coords_to_kp(pt1)
+  kp2 = coords_to_kp(pt2)
+  bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+  matches = bf.knnMatch(des1, des2, k=2)
+
+  # Lowe's Ratio Test
+  good = []
+  des_idxs = []
+  for m, n in matches:
+    if m.distance < 32 and (m.distance < 0.75*n.distance and 5 < np.linalg.norm(np.subtract(kp2[m.trainIdx].pt, kp1[m.queryIdx].pt)) < 300): #m.distance < 32
+      good.append(m.trainIdx)
+      des_idxs.append((m.queryIdx, m.trainIdx))
+
+  des_idxs = np.array(des_idxs)
+
+
+  return des_idxs
+
+
+
 
 if __name__ == "__main__":
   cap = cv2.VideoCapture('vid/06.mp4')
