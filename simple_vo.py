@@ -7,7 +7,7 @@ class SimpleVO(object):
 
     self.poses = []
 
-    self.focal = 1000
+    self.focal = 718.8560
     if K is not None:
       self.K = np.array(K)
     else:

@@ -8,7 +8,7 @@ class Frame(object):
     self.Rt = np.eye(4)
     self.img = img
     self.coords = getCorners(img)
-    self.focal = 1000
+    self.focal = 718.8560
     self.K = np.array([
         [self.focal, 0, img.shape[1]//2],
         [0, self.focal, img.shape[0]//2],
@@ -47,13 +47,14 @@ class Frame(object):
     pt2 = coord2[idxs[:,1]]
   
     #return idxs[inliers], model.params
-    E, mask = cv2.findEssentialMat(pt1, pt2, cameraMatrix=self.K, method=cv2.RANSAC, prob=0.999, threshold=1.0)
-    #E, mask = cv2.findFundamentalMat(coord1[idxs[:,0]], coord2[idxs[:,1]], method=cv2.FM_RANSAC)
+    E, mask = cv2.findEssentialMat(pt1, pt2, cameraMatrix=self.K, method=cv2.RANSAC, prob=0.9, threshold=1.0)
+    #E, mask = cv2.findFundamentalMat(coord1[idxs[:,0]], coord2[idxs[:,1]], method=cv2.FM_RANSAC, ransacReprojThreshold=3.0, confidence=0.99)
   
     mask = mask.flatten()
     idxs = idxs[(mask==1), :]
 
     self.des_idxs = idxs
+
     self.E = E
     #print(self.E)
 
@@ -61,9 +62,11 @@ class Frame(object):
     prev_pts = prev.coords[self.des_idxs[:,1]]
     cur_pts = self.coords[self.des_idxs[:,0]]
     ret, R, t, mask, pts = cv2.recoverPose(self.E, prev_pts, cur_pts, cameraMatrix=self.K, distanceThresh=1000)
-    t = t / t[-1]
+    t = t/t[-1]
     Rt = np.eye(4)
     Rt[:3, :3] = R
     Rt[:3, 3] = np.squeeze(t)
+    #Rt = Rt/t[-1]
     self.Rt = prev.Rt.dot(Rt)
-    #print(self.Rt)
+    #self.Rt = Rt.dot(prev.Rt)
+    print(self.Rt)

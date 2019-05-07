@@ -1,6 +1,6 @@
 param = dict(
-  gftt = dict(maxCorners = 5000,
+  gftt = dict(maxCorners = 10000,
               qualityLevel = 0.01,
-              minDistance = 7)
+              minDistance = 15)
               
               )
