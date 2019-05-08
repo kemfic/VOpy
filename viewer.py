@@ -36,7 +36,7 @@ class Viewer3D(object):
     
     self.stop()
   def viewer_init(self):
-    w, h = (1024,768)
+    w, h = (1240,960)
     f = 2000 #420
 
     pango.CreateWindowAndBind("Visual Odometry Trajectory Viewer", w, h)
@@ -68,10 +68,10 @@ class Viewer3D(object):
     
     # Translation error graph
     self.log = pango.DataLog()
-    self.labels = ["error_x", "error_y", "error_z"]#, "error_euclidean"]
+    self.labels = ['error_x', 'error_y', 'error_z']#, "error_euclidean"]
     self.log.SetLabels(self.labels)
 
-    self.plotter = pango.Plotter(self.log,0.0, 6.0*np.pi/0.1, -2.0, 2.0, np.pi/(6*0.1), 0.5)
+    self.plotter = pango.Plotter(self.log,0.0, 1500, -15, 30,10, 0.5)
     self.plotter.SetBounds(0.0, self.h_i/h, 0.0, 1-self.w_i/w, -w/h)
 
     self.plotter.Track('$i')
