@@ -44,19 +44,26 @@ class SimpleVO(object):
     return out
 
 if __name__ == "__main__":
-  #cap = cv2.VideoCapture('vid/06.mp4')
-  cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
+  cap = cv2.VideoCapture('vid/06.mp4')
+  #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
   ret, frame = cap.read()
   vo = SimpleVO(frame)
   viewer = Viewer3D()
+  
+  txt = np.loadtxt("vid/06.txt")
 
   while cap.isOpened():
     ret, frame = cap.read()
     vo.update(frame)
     #cv2.imshow("frame", vo.annotate_frames())
-    
-    if cap.get(cv2.CAP_PROP_POS_FRAMES) > 2:
-      viewer.update(vo)
+    framenum = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+    if framenum > 2:
+      
+      gt = np.eye(4)
+      gt[:3, :] = txt[framenum].reshape(3,4)
+      
+      viewer.update(vo, gt)
+
     vo.prevFrame = vo.curFrame
     if cv2.waitKey(1) & 0xFF == ord('q'):
       print("exiting...")

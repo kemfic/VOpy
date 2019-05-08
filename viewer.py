@@ -13,21 +13,25 @@ class Viewer3D(object):
   w_i, h_i = (600, 200)
   def __init__(self):
     self.state = None
+    self.state_gt = None
     self.q_poses = Queue()
+    self.q_gt = Queue()
     self.q_img = Queue()
-    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_img,))
+    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,))
     self.vt.daemon = True
     self.vt.start()
 
 
     self.poses = []
+    self.gt = []
 
-  def viewer_thread(self, q_poses, q_img):
+
+  def viewer_thread(self, q_poses, q_gt, q_img):
     self.viewer_init()
 
     while not pango.ShouldQuit():#True:
       #print('refresh')
-      self.viewer_refresh(q_poses,q_img)
+      self.viewer_refresh(q_poses,q_gt, q_img)
     
     self.stop()
   def viewer_init(self):
@@ -62,7 +66,7 @@ class Viewer3D(object):
     self.img = np.ones((self.h_i, self.w_i, 3),'uint8')*255
 
 
-  def viewer_refresh(self, q_poses, q_img):
+  def viewer_refresh(self, q_poses, q_gt, q_img):
     while not q_poses.empty():
       self.state = q_poses.get()
     if not q_img.empty():
@@ -70,6 +74,8 @@ class Viewer3D(object):
       self.img = self.img[::-1, :]
       self.img = cv2.resize(self.img, (self.w_i, self.h_i))
 
+    while not q_gt.empty():
+      self.state_gt = q_gt.get()
 
     # Clear and Activate Screen (we got a real nice shade of gray
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -80,6 +86,10 @@ class Viewer3D(object):
     # Render
     if self.state is not None:
       gl.glLineWidth(1)
+      # Render current pose
+      if self.state_gt[0].shape[0] >= 1:
+        gl.glColor3f(1.0, 1.0, 1.0)
+        pango.DrawCameras(self.state_gt)
       # Render previous keyframes
       if self.state[0].shape[0] >= 2:
         gl.glColor3f(1.0, 0.0, 1.0)
@@ -102,7 +112,7 @@ class Viewer3D(object):
 
     pango.FinishFrame()
 
-  def update(self, vo=None):
+  def update(self, vo=None, gt = np.eye(4)):
     '''
     Add new data to queue
     '''
@@ -112,7 +122,9 @@ class Viewer3D(object):
 
 
     self.poses.append(vo.poses[-1])
+    self.gt.append(gt)
     self.q_img.put(vo.annotate_frames())
+    self.q_gt.put(np.array(self.gt))
     self.q_poses.put(np.array(self.poses))
 
   def stop(self):
