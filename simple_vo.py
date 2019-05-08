@@ -44,7 +44,8 @@ class SimpleVO(object):
     return out
 
 if __name__ == "__main__":
-  cap = cv2.VideoCapture('vid/06.mp4')
+  #cap = cv2.VideoCapture('vid/06.mp4')
+  cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
   ret, frame = cap.read()
   vo = SimpleVO(frame)
   viewer = Viewer3D()
@@ -52,7 +53,7 @@ if __name__ == "__main__":
   while cap.isOpened():
     ret, frame = cap.read()
     vo.update(frame)
-    cv2.imshow("frame", vo.annotate_frames())
+    #cv2.imshow("frame", vo.annotate_frames())
     
     if cap.get(cv2.CAP_PROP_POS_FRAMES) > 2:
       viewer.update(vo)

@@ -69,4 +69,4 @@ class Frame(object):
     #Rt = Rt/t[-1]
     self.Rt = prev.Rt.dot(Rt)
     #self.Rt = Rt.dot(prev.Rt)
-    print(self.Rt)
+    #print(self.Rt)
