@@ -38,9 +38,9 @@ class SimpleVO(object):
     out = np.copy(a.img)
     old_coords = b.coords
     
-    [cv2.line(out, tuple(np.int0(a.coords[i_a])), tuple(np.int0(b.coords[i_b])), (255, 0, 255), 1) for i_a, i_b in a.des_idxs]
+    [cv2.line(out, tuple(np.int0(a.coords[i_a])), tuple(np.int0(b.coords[i_b])), (255, 0, 255), 2) for i_a, i_b in a.des_idxs]
 
-    [cv2.circle(out, tuple(np.int0(a.coords[i_a])), 2,(0,255,0)) for i_a, i_b in a.des_idxs]
+    [cv2.circle(out, tuple(np.int0(a.coords[i_a])), 4,(0,255,0), 2) for i_a, i_b in a.des_idxs]
     return out
 
 if __name__ == "__main__":

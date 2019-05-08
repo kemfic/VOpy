@@ -28,7 +28,8 @@ class Viewer3D(object):
     while not pango.ShouldQuit():#True:
       #print('refresh')
       self.viewer_refresh(q_poses,q_img)
-
+    
+    self.stop()
   def viewer_init(self):
     w, h = (1024,768)
     f = 2000 #420
@@ -117,10 +118,9 @@ class Viewer3D(object):
   def stop(self):
     self.vt.terminate()
     self.vt.join()
-
+    qtype = type(Queue())
     for x in self.__dict__.values():
-      if isinstance(x, type(Queue())):
+      if isinstance(x, qtype):
         while not x.empty():
           _ = x.get()
-
     print("viewer stopped")
