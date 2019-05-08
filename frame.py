@@ -6,6 +6,7 @@ from utils import *
 class Frame(object):
   def __init__(self, img):
     self.Rt = np.eye(4)
+    self.R = np.eye(3)
     self.img = img
     self.coords = getCorners(img)
     self.focal = 718.8560
@@ -58,15 +59,15 @@ class Frame(object):
     self.E = E
     #print(self.E)
 
-  def get_Rt(self, prev):
+  def get_Rt(self, prev, scale=1.0):
     prev_pts = prev.coords[self.des_idxs[:,1]]
     cur_pts = self.coords[self.des_idxs[:,0]]
     ret, R, t, mask, pts = cv2.recoverPose(self.E, prev_pts, cur_pts, cameraMatrix=self.K, distanceThresh=1000)
-    t = t/t[-1]
+    t = scale*t/t[-1]
+    
     Rt = np.eye(4)
     Rt[:3, :3] = R
     Rt[:3, 3] = np.squeeze(t)
-    #Rt = Rt/t[-1]
     self.Rt = prev.Rt.dot(Rt)
     #self.Rt = Rt.dot(prev.Rt)
     #print(self.Rt)

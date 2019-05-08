@@ -79,8 +79,8 @@ class Viewer3D(object):
 
     # Clear and Activate Screen (we got a real nice shade of gray
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-    #gl.glClearColor(0.15, 0.15, 0.15, 0.0)
-    gl.glClearColor(0.0,0.0, 0.0, 0.0)
+    gl.glClearColor(0.15, 0.15, 0.15, 0.0)
+    #gl.glClearColor(0.0,0.0, 0.0, 0.0)
     self.dcam.Activate(self.scam)
 
     # Render

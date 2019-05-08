@@ -6,7 +6,8 @@ class SimpleVO(object):
   def __init__(self, img, K=None):
 
     self.poses = []
-
+    self.gt = []
+    self.gt.append(np.eye(4))
     self.focal = 718.8560
     if K is not None:
       self.K = np.array(K)
@@ -20,11 +21,13 @@ class SimpleVO(object):
     self.curFrame = Frame(img)
     self.poses.append(self.curFrame.Rt)
 
-  def update(self, img):
+  def update(self, img, gt):
     self.curFrame = Frame(img)
     self.curFrame.match_frames(self.prevFrame)
     self.curFrame.get_essential_matrix(self.prevFrame)
-    self.curFrame.get_Rt(self.prevFrame)
+    self.gt.append(gt)
+    self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )
+    self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
     #self.prevFrame = self.curFrame
 
@@ -47,21 +50,22 @@ if __name__ == "__main__":
   cap = cv2.VideoCapture('vid/06.mp4')
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
   ret, frame = cap.read()
-  vo = SimpleVO(frame)
+  vo = SimpleVO(frame, np.eye(4))
   viewer = Viewer3D()
   
   txt = np.loadtxt("vid/06.txt")
 
   while cap.isOpened():
     ret, frame = cap.read()
-    vo.update(frame)
     #cv2.imshow("frame", vo.annotate_frames())
+    
     framenum = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+    
+    gt = np.eye(4)
+    gt[:3, :] = txt[framenum].reshape(3,4)
+    
+    vo.update(frame, gt)
     if framenum > 2:
-      
-      gt = np.eye(4)
-      gt[:3, :] = txt[framenum].reshape(3,4)
-      
       viewer.update(vo, gt)
 
     vo.prevFrame = vo.curFrame
