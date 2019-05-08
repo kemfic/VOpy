@@ -17,7 +17,8 @@ class Viewer3D(object):
     self.q_poses = Queue()
     self.q_gt = Queue()
     self.q_img = Queue()
-    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,))
+    self.q_errors = Queue()
+    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,self.q_errors,))
     self.vt.daemon = True
     self.vt.start()
 
@@ -26,12 +27,12 @@ class Viewer3D(object):
     self.gt = []
 
 
-  def viewer_thread(self, q_poses, q_gt, q_img):
+  def viewer_thread(self, q_poses, q_gt, q_img, q_errors):
     self.viewer_init()
 
     while not pango.ShouldQuit():#True:
       #print('refresh')
-      self.viewer_refresh(q_poses,q_gt, q_img)
+      self.viewer_refresh(q_poses,q_gt, q_img, q_errors)
     
     self.stop()
   def viewer_init(self):
@@ -64,9 +65,28 @@ class Viewer3D(object):
 
     self.texture = pango.GlTexture(self.w_i, self.h_i, gl.GL_RGB, False, 0, gl.GL_RGB, gl.GL_UNSIGNED_BYTE)
     self.img = np.ones((self.h_i, self.w_i, 3),'uint8')*255
+    
+    # Translation error graph
+    self.log = pango.DataLog()
+    self.labels = ["error_x", "error_y", "error_z"]#, "error_euclidean"]
+    self.log.SetLabels(self.labels)
 
+    self.plotter = pango.Plotter(self.log,0.0, 6.0*np.pi/0.1, -2.0, 2.0, np.pi/(6*0.1), 0.5)
+    self.plotter.SetBounds(0.0, self.h_i/h, 0.0, 1-self.w_i/w, -w/h)
 
-  def viewer_refresh(self, q_poses, q_gt, q_img):
+    self.plotter.Track('$i')
+
+    # Add some sample annotations to the plot
+    self.plotter.AddMarker(pango.Marker.Vertical, -1000, pango.Marker.LessThan,
+        pango.Colour.Blue().WithAlpha(0.2))
+    self.plotter.AddMarker(pango.Marker.Horizontal, 100, pango.Marker.GreaterThan,
+        pango.Colour.Red().WithAlpha(0.2))
+    self.plotter.AddMarker(pango.Marker.Horizontal,  10, pango.Marker.Equal,
+        pango.Colour.Green().WithAlpha(0.2))
+
+    pango.DisplayBase().AddDisplay(self.plotter)
+
+  def viewer_refresh(self, q_poses, q_gt, q_img, q_errors):
     while not q_poses.empty():
       self.state = q_poses.get()
     if not q_img.empty():
@@ -76,6 +96,10 @@ class Viewer3D(object):
 
     while not q_gt.empty():
       self.state_gt = q_gt.get()
+
+    while not q_errors.empty():
+      errors = q_errors.get()
+      self.log.Log(errors[0], errors[1], errors[2])
 
     # Clear and Activate Screen (we got a real nice shade of gray
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -120,13 +144,15 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
+    error = abs(vo.poses[-1][:3, -1] - gt[:3, -1])
+
 
     self.poses.append(vo.poses[-1])
     self.gt.append(gt)
     self.q_img.put(vo.annotate_frames())
     self.q_gt.put(np.array(self.gt))
     self.q_poses.put(np.array(self.poses))
-
+    self.q_errors.put((error))
   def stop(self):
     self.vt.terminate()
     self.vt.join()
