@@ -25,7 +25,8 @@ class Viewer3D(object):
 
     self.poses = []
     self.gt = []
-
+    self.poses.append(np.eye(4))
+    self.gt.append(np.eye(4))
 
   def viewer_thread(self, q_poses, q_gt, q_img, q_errors):
     self.viewer_init()
@@ -36,7 +37,7 @@ class Viewer3D(object):
     
     self.stop()
   def viewer_init(self):
-    w, h = (1240,960)
+    w, h = (1024,768)
     f = 2000 #420
 
     pango.CreateWindowAndBind("Visual Odometry Trajectory Viewer", w, h)
@@ -71,7 +72,7 @@ class Viewer3D(object):
     self.labels = ['error_x', 'error_y', 'error_z']#, "error_euclidean"]
     self.log.SetLabels(self.labels)
 
-    self.plotter = pango.Plotter(self.log,0.0, 1500, -15, 30,10, 0.5)
+    self.plotter = pango.Plotter(self.log,0.0, 1500, -15, 15,10, 0.5)
     self.plotter.SetBounds(0.0, self.h_i/h, 0.0, 1-self.w_i/w, -w/h)
 
     self.plotter.Track('$i')
@@ -144,7 +145,7 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    error = abs(vo.poses[-1][:3, -1] - gt[:3, -1])
+    error = abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1]))
 
 
     self.poses.append(vo.poses[-1])
