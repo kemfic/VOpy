@@ -9,11 +9,18 @@ class Frame(object):
     self.R = np.eye(3)
     self.img = img
     self.coords = getCorners(img)
-    self.focal = 718.8560
+    self.focal = 707.0912
+    """
     self.K = np.array([
         [self.focal, 0, img.shape[1]//2],
         [0, self.focal, img.shape[0]//2],
         [0, 0, 1]])
+    """
+
+    self.K = np.array([
+        [self.focal, 0.0, 601.8873],
+        [0.0, self.focal, 183.1104],
+        [0.0,0.0,1.0]])
     self.coords, self.des = get_features_orb(self.img, self.coords)
 
   def match_frames(self, prev):

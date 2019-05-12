@@ -27,6 +27,7 @@ class SimpleVO(object):
     self.curFrame.get_essential_matrix(self.prevFrame)
     self.gt.append(gt)
     self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )
+    #self.scale = 1.0
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
     #self.prevFrame = self.curFrame
@@ -49,6 +50,7 @@ class SimpleVO(object):
 if __name__ == "__main__":
   cap = cv2.VideoCapture('vid/06.mp4')
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
+
   ret, frame = cap.read()
   vo = SimpleVO(frame, np.eye(4))
   viewer = Viewer3D()
