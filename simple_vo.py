@@ -56,7 +56,8 @@ if __name__ == "__main__":
   viewer = Viewer3D()
   
   txt = np.loadtxt("vid/06.txt")
-
+  gt_prev = np.eye(4)
+  error = []
   while cap.isOpened():
     ret, frame = cap.read()
     #cv2.imshow("frame", vo.annotate_frames())
@@ -65,10 +66,15 @@ if __name__ == "__main__":
     
     gt = np.eye(4)
     gt[:3, :] = txt[framenum].reshape(3,4)
-    
+    gt_tform = gt * np.linalg.inv(gt_prev)
+
+
+    gt_prev = gt
     vo.update(frame, gt)
     if framenum > 2:
       viewer.update(vo, gt)
+      error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
+      print(np.mean(error), error[-1])
 
     vo.prevFrame = vo.curFrame
     if cv2.waitKey(1) & 0xFF == ord('q'):

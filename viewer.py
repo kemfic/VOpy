@@ -77,14 +77,6 @@ class Viewer3D(object):
 
     self.plotter.Track('$i')
 
-    # Add some sample annotations to the plot
-    self.plotter.AddMarker(pango.Marker.Vertical, -1000, pango.Marker.LessThan,
-        pango.Colour.Blue().WithAlpha(0.2))
-    self.plotter.AddMarker(pango.Marker.Horizontal, 100, pango.Marker.GreaterThan,
-        pango.Colour.Red().WithAlpha(0.2))
-    self.plotter.AddMarker(pango.Marker.Horizontal,  10, pango.Marker.Equal,
-        pango.Colour.Green().WithAlpha(0.2))
-
     pango.DisplayBase().AddDisplay(self.plotter)
 
   def viewer_refresh(self, q_poses, q_gt, q_img, q_errors):
@@ -146,7 +138,6 @@ class Viewer3D(object):
       return
 
     error = abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1]))
-
 
     self.poses.append(vo.poses[-1])
     self.gt.append(gt)
