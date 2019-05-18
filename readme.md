@@ -21,3 +21,10 @@ todo
  - clean up code
  - writeup
  - merge with ficiciSLAM
+
+
+dependencies
+---
+ - opencv
+ - numpy
+ - [pangolin (uoip fork)](https://github.com/uoip/pangolin)
