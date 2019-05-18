@@ -14,3 +14,10 @@ pipeline
  - RANSAC 5-point Essential Matrix Estimation
  - Decompose Essential Matrix into a pose(Rt) matrix
  - output pose
+
+todo
+---
+ - error metrics
+ - clean up code
+ - writeup
+ - merge with ficiciSLAM
