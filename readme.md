@@ -3,7 +3,7 @@ simple visual odometry in python
 
 <p float="left">
   <img src="resources/img.png" height="250" />
-  <img src="resources/output.png" height="250" />
+  <img src="resources/output.jpg" height="250" />
 </p>
 
 pipeline
