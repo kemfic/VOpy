@@ -48,14 +48,14 @@ class SimpleVO(object):
     return out
 
 if __name__ == "__main__":
-  cap = cv2.VideoCapture('vid/05.mp4')
+  cap = cv2.VideoCapture('vid/06.mp4')
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
 
   ret, frame = cap.read()
   vo = SimpleVO(frame, np.eye(4))
   viewer = Viewer3D()
   
-  txt = np.loadtxt("vid/05.txt")
+  txt = np.loadtxt("vid/06.txt")
   gt_prev = np.eye(4)
   error = []
   while cap.isOpened():
@@ -73,8 +73,10 @@ if __name__ == "__main__":
     vo.update(frame, gt)
     if framenum > 2:
       viewer.update(vo, gt)
-      error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
-      print(np.mean(error), error[-1])
+      p_tform = vo.poses[-1] * np.linalg.inv(vo.poses[-2])
+      error.append((p_tform * np.linalg.inv(gt_tform))[:3, -1])
+      #error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
+      #print(np.mean(error), error[-1])
 
     vo.prevFrame = vo.curFrame
     if cv2.waitKey(1) & 0xFF == ord('q'):

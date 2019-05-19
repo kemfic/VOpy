@@ -69,15 +69,16 @@ class Viewer3D(object):
     
     # Translation error graph
     self.log = pango.DataLog()
-    self.labels = ['error_x', 'error_y', 'error_z']#, "error_euclidean"]
+    self.labels = ['error']#, "error_euclidean"]
     self.log.SetLabels(self.labels)
 
-    self.plotter = pango.Plotter(self.log,0.0, 1500, -15, 15,10, 0.5)
+    self.plotter = pango.Plotter(self.log,0.0, 1500, -1500, 2500,10, 0.5)
     self.plotter.SetBounds(0.0, self.h_i/h, 0.0, 1-self.w_i/w, -w/h)
 
-    self.plotter.Track('$i')
+    self.plotter.Track("$i", "")
 
     pango.DisplayBase().AddDisplay(self.plotter)
+    self.errorlog = []
 
   def viewer_refresh(self, q_poses, q_gt, q_img, q_errors):
     while not q_poses.empty():
@@ -92,7 +93,11 @@ class Viewer3D(object):
 
     while not q_errors.empty():
       errors = q_errors.get()
-      self.log.Log(errors[0], errors[1], errors[2])
+      #self.log.Log(errors[0], errors[1], errors[2])
+
+      self.errorlog.append(errors)
+      print(np.shape(self.errorlog))
+      self.log.Log(np.sum(self.errorlog))
 
     # Clear and Activate Screen (we got a real nice shade of gray
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -137,7 +142,7 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    error = abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1]))
+    error = sum(abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1])))
 
     self.poses.append(vo.poses[-1])
     self.gt.append(gt)
