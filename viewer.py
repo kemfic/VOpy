@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import OpenGL.GL as gl
 from multiprocessing import Process, Queue
+from pyquaternion import Quaternion
 
 class Viewer3D(object):
   '''
@@ -69,7 +70,7 @@ class Viewer3D(object):
     
     # Translation error graph
     self.log = pango.DataLog()
-    self.labels = ['error']#, "error_euclidean"]
+    self.labels = ['error_t', 'error_r']#, "error_euclidean"]
     self.log.SetLabels(self.labels)
 
     self.plotter = pango.Plotter(self.log,0.0, 1500, -1500, 2500,10, 0.5)
@@ -78,7 +79,7 @@ class Viewer3D(object):
     self.plotter.Track("$i", "")
 
     pango.DisplayBase().AddDisplay(self.plotter)
-    self.errorlog = []
+    self.errorlog_r, self.errorlog_t = [], []
 
   def viewer_refresh(self, q_poses, q_gt, q_img, q_errors):
     while not q_poses.empty():
@@ -92,12 +93,13 @@ class Viewer3D(object):
       self.state_gt = q_gt.get()
 
     while not q_errors.empty():
-      errors = q_errors.get()
+      error_t, error_r = q_errors.get()
       #self.log.Log(errors[0], errors[1], errors[2])
 
-      self.errorlog.append(errors)
-      print(np.shape(self.errorlog))
-      self.log.Log(np.sum(self.errorlog))
+      self.errorlog_t.append(error_t)
+      self.errorlog_r.append(error_r)
+      #print(np.shape(self.errorlog))
+      self.log.Log(np.sum(self.errorlog_t), np.sum(self.errorlog_r))
 
     # Clear and Activate Screen (we got a real nice shade of gray
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -142,14 +144,25 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    error = sum(abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1])))
+    error_t = sum(abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1])))
+
+    gt_prev_qt = Quaternion(matrix=self.gt[-1])
+    gt_qt = Quaternion(matrix=gt)
+    gt_tform = gt_prev_qt * gt_qt.inverse
+
+    cur_qt = Quaternion(matrix=vo.poses[-1])
+    prev_qt = Quaternion(matrix=vo.poses[-2])
+    qt_tform = prev_qt * cur_qt.inverse
+
+    error_r = Quaternion.absolute_distance(gt_tform, qt_tform)
+
 
     self.poses.append(vo.poses[-1])
     self.gt.append(gt)
     self.q_img.put(vo.annotate_frames())
     self.q_gt.put(np.array(self.gt))
     self.q_poses.put(np.array(self.poses))
-    self.q_errors.put((error))
+    self.q_errors.put((error_t, error_r))
   def stop(self):
     self.vt.terminate()
     self.vt.join()
