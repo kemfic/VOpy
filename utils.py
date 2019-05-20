@@ -62,7 +62,7 @@ def getError(cur_pose, prev_pose, cur_gt, prev_gt):
   """
   Computes the error of the transformation between 2 poses
   """
-  error_t = sum(abs((prev_pose[:3, -1] - cur_pose[:3,-1]) - (cur_gt[:3,-1] - prev_gt[:3,-1])))
+  error_t = np.linalg.norm((prev_pose[:3, -1] - cur_pose[:3,-1]) - (cur_gt[:3,-1] - prev_gt[:3,-1]))
   
   gt_prev_qt = quaternion.from_rotation_matrix(prev_gt[:3, :3])
   gt_qt = quaternion.from_rotation_matrix(cur_gt[:3, :3])
