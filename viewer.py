@@ -95,7 +95,7 @@ class Viewer3D(object):
       self.state_gt = q_gt.get()
 
     while not q_errors.empty():
-      error_t, error_r = q_errors.get()
+      error_r, error_t = q_errors.get()[-1]
       #self.log.Log(errors[0], errors[1], errors[2])
 
       self.errorlog_t.append(error_t)
@@ -138,7 +138,7 @@ class Viewer3D(object):
 
     pango.FinishFrame()
 
-  def update(self, vo=None, gt = np.eye(4)):
+  def update(self, vo=None):
     '''
     Add new data to queue
     '''
@@ -146,15 +146,10 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    error_r, error_t = getError(vo.poses[-1],vo.poses[-2],gt, self.gt[-1])
-
-
-    self.poses.append(vo.poses[-1])
-    self.gt.append(gt)
     self.q_img.put(vo.annotate_frames())
-    self.q_gt.put(np.array(self.gt))
-    self.q_poses.put(np.array(self.poses))
-    self.q_errors.put((error_t, error_r))
+    self.q_gt.put(np.array(vo.gt))
+    self.q_poses.put(np.array(vo.poses))
+    self.q_errors.put(vo.errors)
   def stop(self):
     self.vt.terminate()
     self.vt.join()
