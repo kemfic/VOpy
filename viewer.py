@@ -138,7 +138,7 @@ class Viewer3D(object):
 
     pango.FinishFrame()
 
-  def update(self, vo=None):
+  def update(self, vo):
     '''
     Add new data to queue
     '''
@@ -148,8 +148,9 @@ class Viewer3D(object):
 
     self.q_img.put(vo.annotate_frames())
     self.q_gt.put(np.array(vo.gt))
-    self.q_poses.put(np.array(vo.poses))
+    self.q_poses.put(vo.poses)
     self.q_errors.put(vo.errors)
+
   def stop(self):
     self.vt.terminate()
     self.vt.join()
