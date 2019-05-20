@@ -114,7 +114,7 @@ class Viewer3D(object):
       # Render current pose
       if self.state_gt[0].shape[0] >= 1:
         gl.glColor3f(1.0, 1.0, 1.0)
-        pango.DrawCameras(self.state_gt)
+        pango.DrawCameras(self.state_gt[1:])
       # Render previous keyframes
       if self.state[0].shape[0] >= 2:
         gl.glColor3f(1.0, 0.0, 1.0)
