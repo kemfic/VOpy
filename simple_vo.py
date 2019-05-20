@@ -1,5 +1,3 @@
-import argparse
-
 import cv2
 import numpy as np
 from frame import Frame
@@ -50,11 +48,6 @@ class SimpleVO(object):
     return out
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="Simple python visual odometry")
-  parser.add_argument('-i', "--input", help="input mp4", required=True)
-  parser.add_argument('-e', "--eval_odom", help="set to False if you have no ground truth data", required=True)
-
-  args = parser.parse_args()
   cap = cv2.VideoCapture('vid/05.mp4')
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
 
