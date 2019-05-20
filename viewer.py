@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import OpenGL.GL as gl
 from multiprocessing import Process, Queue
+from utils import getError
 #from pyquaternion import Quaternion
 import quaternion
 
@@ -145,18 +146,7 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    error_t = sum(abs((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (self.gt[-1][:3,-1] - gt[:3,-1])))
-    
-    gt_prev_qt = quaternion.from_rotation_matrix(self.gt[-1][:3, :3])
-    gt_qt = quaternion.from_rotation_matrix(gt[:3, :3])
-    gt_tform = gt_prev_qt * gt_qt.inverse()
-    
-    cur_qt = quaternion.from_rotation_matrix(vo.poses[-1][:3, :3])
-    prev_qt = quaternion.from_rotation_matrix(vo.poses[-2][:3, :3])
-
-    qt_tform = prev_qt * cur_qt.inverse()
-
-    error_r = np.sum(np.rad2deg(quaternion.rotation_intrinsic_distance(gt_tform, qt_tform)))
+    error_r, error_t = getError(vo.poses[-1],vo.poses[-2],gt, self.gt[-1])
 
 
     self.poses.append(vo.poses[-1])

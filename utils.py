@@ -1,6 +1,7 @@
 # Utility functions
 import cv2
 import numpy as np
+import quaternion
 from params import param
 
 def bgr2gray(img):
@@ -56,3 +57,22 @@ def match_frames(des1, des2, pt1, pt2):
 
 def coords_to_kp(coords):
   return [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=15) for f in coords]
+
+def getError(cur_pose, prev_pose, cur_gt, prev_gt):
+  """
+  Computes the error of the transformation between 2 poses
+  """
+  error_t = sum(abs((prev_pose[:3, -1] - cur_pose[:3,-1]) - (cur_gt[:3,-1] - prev_gt[:3,-1])))
+  
+  gt_prev_qt = quaternion.from_rotation_matrix(prev_gt[:3, :3])
+  gt_qt = quaternion.from_rotation_matrix(cur_gt[:3, :3])
+  gt_tform = gt_prev_qt * gt_qt.inverse()
+  
+  cur_qt = quaternion.from_rotation_matrix(prev_pose[:3, :3])
+  prev_qt = quaternion.from_rotation_matrix(cur_pose[:3, :3])
+
+  qt_tform = prev_qt * cur_qt.inverse()
+
+  error_r = np.sum(np.rad2deg(quaternion.rotation_intrinsic_distance(gt_tform, qt_tform)))
+
+  return error_r, error_t

@@ -8,7 +8,7 @@ class SimpleVO(object):
     self.poses = []
     self.gt = []
     self.gt.append(np.eye(4))
-    self.focal = 7.070912000000e+02#718.8560
+    self.focal = 7.070912
     if K is not None:
       self.K = np.array(K)
     else:
@@ -30,7 +30,6 @@ class SimpleVO(object):
     #self.scale = 1.0
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
-    #self.prevFrame = self.curFrame
 
   def annotate_frames(self):
     """
@@ -52,7 +51,7 @@ if __name__ == "__main__":
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
 
   ret, frame = cap.read()
-  vo = SimpleVO(frame, np.eye(4))
+  vo = SimpleVO(frame)#, np.eye(4))
   viewer = Viewer3D()
   
   txt = np.loadtxt("vid/05.txt")
