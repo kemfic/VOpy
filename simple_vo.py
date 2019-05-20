@@ -10,7 +10,7 @@ class SimpleVO(object):
     self.poses = []
     self.gt = []
     self.gt.append(np.eye(4))
-    self.focal = 718.8560
+    self.focal = 7.070912000000e+02#718.8560
     if K is not None:
       self.K = np.array(K)
     else:
