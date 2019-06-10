@@ -17,8 +17,6 @@ pipeline
 
 todo
 ---
- - error metrics
- - clean up code
  - writeup
  - merge with ficiciSLAM
 
