@@ -155,7 +155,8 @@ class Viewer3D(object):
     self.q_img.put(vo.annotate_frames())
     self.q_gt.put(np.array(vo.gt))
     self.q_poses.put(vo.poses)
-    self.q_errors.put(vo.errors)
+    if len(vo.errors) > 0:
+      self.q_errors.put(vo.errors)
 
   def stop(self):
     self.vt.terminate()

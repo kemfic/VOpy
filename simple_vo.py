@@ -36,20 +36,21 @@ class SimpleVO(object):
     self.curFrame.match_frames(self.prevFrame)
     self.curFrame.get_essential_matrix(self.prevFrame)
 
-    self.gt.append(gt)
 
     #TODO: set scale to 1.0 if there is no gt
     if gt is not None:
+      self.gt.append(gt)
       self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )    
     else:
       self.scale = 1.0
     
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
+    
+    if gt is not None:
+      error_r, error_t = getError(vo.poses[-1],vo.poses[-2],vo.gt[-1], vo.gt[-2])
 
-    error_r, error_t = getError(vo.poses[-1],vo.poses[-2],vo.gt[-1], vo.gt[-2])
-
-    self.errors.append((error_r, error_t))
+      self.errors.append((error_r, error_t))
 
   def annotate_frames(self):
     """
@@ -73,33 +74,39 @@ if __name__ == "__main__":
 
   cap = cv2.VideoCapture(args['<sequence>'])
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
-
+  
   ret, frame = cap.read()
   vo = SimpleVO(frame)#, np.eye(4))
   viewer = Viewer3D()
-  #if args['<gt>'] is not None:
-  #txt = np.loadtxt("vid/06.txt")
-  gt_prev = np.eye(4)
-  error = []
+  if args['<gt>'] is not None:
+    txt = np.loadtxt("vid/06.txt")
+    gt_prev = np.eye(4)
+    error = []
+  
   while not vt_done.is_set() and cap.get(cv2.CAP_PROP_POS_FRAMES) < cap.get(cv2.CAP_PROP_FRAME_COUNT):
     ret, frame = cap.read()
     #cv2.imshow("frame", vo.annotate_frames())
     
     framenum = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
     
-    gt = np.eye(4)
-    #gt[:3, :] = txt[framenum].reshape(3,4)
-    gt_tform = gt * np.linalg.inv(gt_prev)
+    if args['<gt>'] is not None:
+      gt = np.eye(4)
+      gt[:3, :] = txt[framenum].reshape(3,4)
+      gt_tform = gt * np.linalg.inv(gt_prev)
 
 
-    gt_prev = gt
-    vo.update(frame, gt)
+      gt_prev = gt
+      vo.update(frame, gt)
+    else:
+      vo.update(frame)
+    
     if framenum > 2:
       viewer.update(vo)
-      p_tform = vo.poses[-1] * np.linalg.inv(vo.poses[-2])
-      error.append((p_tform * np.linalg.inv(gt_tform))[:3, -1])
-      #error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
-      #print(np.mean(error), error[-1])
+      if args['<gt>'] is not None:
+        p_tform = vo.poses[-1] * np.linalg.inv(vo.poses[-2])
+        error.append((p_tform * np.linalg.inv(gt_tform))[:3, -1])
+        #error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
+        #print(np.mean(error), error[-1])
 
     vo.prevFrame = vo.curFrame
   
