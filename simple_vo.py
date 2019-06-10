@@ -105,8 +105,6 @@ if __name__ == "__main__":
       if args['<gt>'] is not None:
         p_tform = vo.poses[-1] * np.linalg.inv(vo.poses[-2])
         error.append((p_tform * np.linalg.inv(gt_tform))[:3, -1])
-        #error.append(abs(np.linalg.norm((vo.poses[-1][:3, -1] - vo.poses[-2][:3,-1]) - (gt_prev[:3,-1] - gt[:3,-1]))))
-        #print(np.mean(error), error[-1])
 
     vo.prevFrame = vo.curFrame
   
