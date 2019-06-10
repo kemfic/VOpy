@@ -4,30 +4,15 @@ from params import param
 from utils import *
 
 class Frame(object):
-  def __init__(self, img, focal=None, K=None):
+  def __init__(self, img, focal=1000., K=None):
     self.Rt = np.eye(4)
     self.R = np.eye(3)
     self.img = img
     self.coords = getCorners(img)
     
-    if focal is not None:
-      self.focal = 707.0912
-    else:
-      self.focal = focal
-
-    """
-    self.K = np.array([
-        [self.focal, 0, img.shape[1]//2],
-        [0, self.focal, img.shape[0]//2],
-        [0, 0, 1]])
-    """
-    if K is not None:
-      self.K = K
-    else:
-      self.K = np.array([
-                [self.focal, 0.0, 601.8873],
-                [0.0, self.focal, 183.1104],
-                [0.0,0.0,1.0]])
+    self.focal = focal
+    self.K = K
+    
     self.coords, self.des = get_features_orb(self.img, self.coords)
 
   def match_frames(self, prev):
@@ -58,7 +43,7 @@ class Frame(object):
   
     pt1 = coord1[idxs[:,0]]
     pt2 = coord2[idxs[:,1]]
-  
+
     E, mask = cv2.findEssentialMat(pt1, pt2, cameraMatrix=self.K, method=cv2.RANSAC, prob=0.9, threshold=1.0)
   
     mask = mask.flatten()

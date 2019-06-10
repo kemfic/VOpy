@@ -10,29 +10,25 @@ import numpy as np
 from frame import Frame
 from viewer import Viewer3D, vt_done
 from utils import getError
+from params import focal, K
 
 class SimpleVO(object):
-  def __init__(self, img, K=None):
+  def __init__(self, img, focal, K):
 
     self.poses = []
     self.gt = []
     self.errors = []
     self.gt.append(np.eye(4))
-    self.focal = 7.070912
-    if K is not None:
-      self.K = np.array(K)
-    else:
-      self.K = np.array([
-        [self.focal, 0, img.shape[1]//2],
-        [0, self.focal, img.shape[0]//2],
-        [0, 0, 1]])
-
-    self.prevFrame = Frame(img)
-    self.curFrame = Frame(img)
+    self.scale = 1.0
+    
+    self.focal = focal
+    self.K = K
+    self.prevFrame = Frame(img, self.focal, self.K)
+    self.curFrame = Frame(img, self.focal, self.K)
     self.poses.append(self.curFrame.Rt)
 
   def update(self, img, gt=None):
-    self.curFrame = Frame(img)
+    self.curFrame = Frame(img, self.focal, self.K)
     self.curFrame.match_frames(self.prevFrame)
     self.curFrame.get_essential_matrix(self.prevFrame)
 
@@ -41,8 +37,6 @@ class SimpleVO(object):
     if gt is not None:
       self.gt.append(gt)
       self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )    
-    else:
-      self.scale = 1.0
     
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
@@ -76,8 +70,13 @@ if __name__ == "__main__":
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
   
   ret, frame = cap.read()
-  vo = SimpleVO(frame)#, np.eye(4))
+
+
+
+  vo = SimpleVO(frame, focal, K)#, np.eye(4))
+  
   viewer = Viewer3D()
+  
   if args['<gt>'] is not None:
     txt = np.loadtxt("vid/06.txt")
     gt_prev = np.eye(4)
