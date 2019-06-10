@@ -4,23 +4,30 @@ from params import param
 from utils import *
 
 class Frame(object):
-  def __init__(self, img):
+  def __init__(self, img, focal=None, K=None):
     self.Rt = np.eye(4)
     self.R = np.eye(3)
     self.img = img
     self.coords = getCorners(img)
-    self.focal = 707.0912
+    
+    if focal is not None:
+      self.focal = 707.0912
+    else:
+      self.focal = focal
+
     """
     self.K = np.array([
         [self.focal, 0, img.shape[1]//2],
         [0, self.focal, img.shape[0]//2],
         [0, 0, 1]])
     """
-
-    self.K = np.array([
-        [self.focal, 0.0, 601.8873],
-        [0.0, self.focal, 183.1104],
-        [0.0,0.0,1.0]])
+    if K is not None:
+      self.K = K
+    else:
+      self.K = np.array([
+                [self.focal, 0.0, 601.8873],
+                [0.0, self.focal, 183.1104],
+                [0.0,0.0,1.0]])
     self.coords, self.des = get_features_orb(self.img, self.coords)
 
   def match_frames(self, prev):
@@ -38,6 +45,7 @@ class Frame(object):
       if (m.distance < 0.75*n.distance and MIN_DISPLACE < np.linalg.norm(np.subtract(kp2[m.trainIdx], kp1[m.queryIdx])) < 200): #m.distance < 32
         good.append(m.trainIdx)
         des_idxs.append((m.queryIdx, m.trainIdx))
+    
     #print(len(des_idxs))
     self.des_idxs = np.array(des_idxs)
     self.kp1 = kp1
@@ -47,16 +55,11 @@ class Frame(object):
     
     coord1 = np.array(self.coords)
     coord2 = np.array(prev.coords)
-    #print(idxs.shape)
-    #print(coord1.shape)
-    #print(coord2.shape)
   
     pt1 = coord1[idxs[:,0]]
     pt2 = coord2[idxs[:,1]]
   
-    #return idxs[inliers], model.params
     E, mask = cv2.findEssentialMat(pt1, pt2, cameraMatrix=self.K, method=cv2.RANSAC, prob=0.9, threshold=1.0)
-    #E, mask = cv2.findFundamentalMat(coord1[idxs[:,0]], coord2[idxs[:,1]], method=cv2.FM_RANSAC, ransacReprojThreshold=3.0, confidence=0.99)
   
     mask = mask.flatten()
     idxs = idxs[(mask==1), :]
@@ -64,7 +67,6 @@ class Frame(object):
     self.des_idxs = idxs
 
     self.E = E
-    #print(self.E)
 
   def get_Rt(self, prev, scale=1.0):
     prev_pts = prev.coords[self.des_idxs[:,1]]
@@ -76,5 +78,3 @@ class Frame(object):
     Rt[:3, :3] = R
     Rt[:3, 3] = np.squeeze(t)
     self.Rt = prev.Rt.dot(Rt)
-    #self.Rt = Rt.dot(prev.Rt)
-    #print(self.Rt)
