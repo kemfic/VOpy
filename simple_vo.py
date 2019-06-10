@@ -1,8 +1,16 @@
+#!/usr/bin/env python3
+"""
+Usage:
+  ./simple_vo.py <sequence> [<gt>]
+"""
+
+from docopt import docopt
 import cv2
 import numpy as np
 from frame import Frame
-from viewer import Viewer3D
+from viewer import Viewer3D, vt_done
 from utils import getError
+
 class SimpleVO(object):
   def __init__(self, img, K=None):
 
@@ -23,7 +31,7 @@ class SimpleVO(object):
     self.curFrame = Frame(img)
     self.poses.append(self.curFrame.Rt)
 
-  def update(self, img, gt):
+  def update(self, img, gt=None):
     self.curFrame = Frame(img)
     self.curFrame.match_frames(self.prevFrame)
     self.curFrame.get_essential_matrix(self.prevFrame)
@@ -31,8 +39,10 @@ class SimpleVO(object):
     self.gt.append(gt)
 
     #TODO: set scale to 1.0 if there is no gt
-    self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )    
-    #self.scale = 1.0
+    if gt is not None:
+      self.scale = np.sqrt(np.sum((self.gt[-1]-self.gt[-2])**2) )    
+    else:
+      self.scale = 1.0
     
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
@@ -57,24 +67,28 @@ class SimpleVO(object):
     return out
 
 if __name__ == "__main__":
-  cap = cv2.VideoCapture('vid/06.mp4')
+  
+  args = docopt(__doc__)
+
+
+  cap = cv2.VideoCapture(args['<sequence>'])
   #cap = cv2.VideoCapture('/home/kemfic/projects/ficicislam/dataset/vids/15.mp4')
 
   ret, frame = cap.read()
   vo = SimpleVO(frame)#, np.eye(4))
   viewer = Viewer3D()
-  
-  txt = np.loadtxt("vid/06.txt")
+  #if args['<gt>'] is not None:
+  #txt = np.loadtxt("vid/06.txt")
   gt_prev = np.eye(4)
   error = []
-  while cap.isOpened():
+  while not vt_done.is_set() and cap.get(cv2.CAP_PROP_POS_FRAMES) < cap.get(cv2.CAP_PROP_FRAME_COUNT):
     ret, frame = cap.read()
     #cv2.imshow("frame", vo.annotate_frames())
     
     framenum = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
     
     gt = np.eye(4)
-    gt[:3, :] = txt[framenum].reshape(3,4)
+    #gt[:3, :] = txt[framenum].reshape(3,4)
     gt_tform = gt * np.linalg.inv(gt_prev)
 
 
@@ -88,9 +102,9 @@ if __name__ == "__main__":
       #print(np.mean(error), error[-1])
 
     vo.prevFrame = vo.curFrame
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-      print("exiting...")
-      break
-
+  
+  
+  print("exiting...")
+  viewer.stop()
   cap.release()
-  cv2.destroyAllWindows()
+  #cv2.destroyAllWindows()

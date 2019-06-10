@@ -2,10 +2,12 @@ import lib.pangolin as pango
 import cv2
 import numpy as np
 import OpenGL.GL as gl
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Event
 from utils import getError
 #from pyquaternion import Quaternion
 import quaternion
+
+vt_done = Event()
 
 class Viewer3D(object):
   '''
@@ -21,15 +23,17 @@ class Viewer3D(object):
     self.q_gt = Queue()
     self.q_img = Queue()
     self.q_errors = Queue()
-    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,self.q_errors,))
-    self.vt.daemon = True
-    self.vt.start()
-
-
+    
     self.poses = []
     self.gt = []
     self.poses.append(np.eye(4))
     self.gt.append(np.eye(4))
+    
+    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,self.q_errors))
+    self.vt.daemon = True
+    self.vt.start()
+
+
 
   def viewer_thread(self, q_poses, q_gt, q_img, q_errors):
     self.viewer_init()
@@ -37,8 +41,10 @@ class Viewer3D(object):
     while not pango.ShouldQuit():#True:
       #print('refresh')
       self.viewer_refresh(q_poses,q_gt, q_img, q_errors)
-    
-    self.stop()
+    print("you hit quit")
+    vt_done.set() 
+    #return None
+    #self.stop()
   def viewer_init(self):
     w, h = (1024,768)
     f = 2000 #420
@@ -154,9 +160,9 @@ class Viewer3D(object):
   def stop(self):
     self.vt.terminate()
     self.vt.join()
-    qtype = type(Queue())
+    #qtype = type(Queue())
     for x in self.__dict__.values():
-      if isinstance(x, qtype):
+      if isinstance(x, type(Queue())):
         while not x.empty():
           _ = x.get()
     print("viewer stopped")
