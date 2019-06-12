@@ -1,5 +1,8 @@
-# VOpy
+# VOpy **no optimization**
+
 simple visual odometry in python
+**NOTE:** this branch is simple visual odometry, no optimization is done here
+
 
 <p float="left">
   <img src="resources/img.png" height="300" />
