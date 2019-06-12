@@ -1,5 +1,7 @@
 # VOpy
-simple visual odometry in python
+simple visual odometry in python (with pose graph optimization)
+
+  to see dead simple VO, check out the vopy_old branch
 
 <p float="left">
   <img src="resources/img.png" height="300" />
