@@ -16,6 +16,7 @@ class PoseGraph3D(object):
     self.optimizer.set_algorithm(self.solver)
 
   def add_vertex(self, id, pose, is_fixed=False):
+    # Rt (pose) matrix, absolute
     v = g2o.VertexSE3()
     v.set_id(id)
     v.set_estimate(pose)
@@ -27,19 +28,35 @@ class PoseGraph3D(object):
   def add_edge(self, nodes, measurement=None, information=np.eye(6), robust_kernel=None):
     edge = g2o.EdgeSE3()
     for i, vertex in enumerate(vertices):
-      if isinstance(node_id, int):
-        node = self.vertex(node_id)
+    
+    # check to see if we're passing in actual vertices or just the vertex ids
+    
+      if isinstance(node_id, int): 
+        vertex = self.vertex(vertex)
 
-      edge.set_vertex(i, node)
-  def optimize(self, iterations=1):
+      edge.set_vertex(i, vertex)
+
+    edge.set_measurement(measurement) # relative pose transformation between frames
+    
+    # information matrix/precision matrix
+    # represents uncertainty of measurement error
+    # inverse of covariance matrix
+    edge.set_information(information) 
+    if robust_kernel is not None:
+      edge.set_robust_kernel(robust_kernel)
+    
+    self.optimizer.add_edge(edge)
+  
+  def optimize(self, max_iter=15):
     self.optimizer.initialize_optimization()
-    self.optimizer.optimize(iterations)
+    self.optimizer.optimize(max_iter)
 
     self.optimizer.save("data/out.g2o")
+
     self.edges_optimized = []
     for edge in self.optimizer.edges():
       self.edges_optimized.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
-
+    self.edges_optimized = sorted([e.vertices()[0]
     self.nodes_optimized = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
     self.nodes_optimized = np.array(self.nodes_optimized)
     self.edges_optimized = np.array(self.edges_optimized)
