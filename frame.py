@@ -6,6 +6,7 @@ from utils import *
 class Frame(object):
   def __init__(self, img, focal=1000., K=None):
     self.Rt = np.eye(4)
+    self.Rt_tform = np.eye(4)
     self.R = np.eye(3)
     self.img = img
     self.coords = getCorners(img)
@@ -64,6 +65,7 @@ class Frame(object):
       Rt = np.eye(4)
       Rt[:3, :3] = R
       Rt[:3, 3] = t.T #np.squeeze(t)
+      self.Rt_tform = Rt
       self.Rt = prev.Rt.dot(Rt)
     else:
       self.Rt = prev.Rt

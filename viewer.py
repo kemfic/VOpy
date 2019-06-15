@@ -19,7 +19,9 @@ class Viewer3D(object):
   def __init__(self):
     self.state = None
     self.state_gt = None
+    self.state_optimized = None
     self.q_poses = Queue()
+    self.q_poses_optimized = Queue()
     self.q_gt = Queue()
     self.q_img = Queue()
     self.q_errors = Queue()
@@ -29,18 +31,18 @@ class Viewer3D(object):
     self.poses.append(np.eye(4))
     self.gt.append(np.eye(4))
     
-    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,self.q_errors))
+    self.vt = Process(target=self.viewer_thread, args=(self.q_poses,self.q_gt,self.q_img,self.q_errors, self.q_poses_optimized))
     self.vt.daemon = True
     self.vt.start()
 
 
 
-  def viewer_thread(self, q_poses, q_gt, q_img, q_errors):
+  def viewer_thread(self, q_poses, q_gt, q_img, q_errors, q_poses_optimized):
     self.viewer_init()
 
     while not pango.ShouldQuit():#True:
       #print('refresh')
-      self.viewer_refresh(q_poses,q_gt, q_img, q_errors)
+      self.viewer_refresh(q_poses,q_gt, q_img, q_errors, q_poses_optimized)
     print("you hit quit")
     vt_done.set() 
     #return None
@@ -89,9 +91,12 @@ class Viewer3D(object):
     pango.DisplayBase().AddDisplay(self.plotter)
     self.errorlog_r, self.errorlog_t = [], []
 
-  def viewer_refresh(self, q_poses, q_gt, q_img, q_errors):
+  def viewer_refresh(self, q_poses, q_gt, q_img, q_errors, q_poses_optimized):
     while not q_poses.empty():
       self.state = q_poses.get()
+    if True:
+      while not q_poses_optimized.empty():
+        self.state_optimized = q_poses_optimized.get()
     if not q_img.empty():
       self.img = q_img.get()
       self.img = self.img[::-1, :]
@@ -131,6 +136,12 @@ class Viewer3D(object):
       if self.state[0].shape[0] >= 1:
         gl.glColor3f(0.2, 1.0, 0.2)
         pango.DrawCameras(self.state[-1:])
+    if True:
+      if self.state_optimized is not None:
+        if self.state_optimized[0].shape[0] >=1:
+          gl.glColor3f(0.5, 1.0, 1.0)
+          pango.DrawCameras(self.state_optimized)
+
 
     #print(self.img.shape)
     #cv2.imshow("test", self.img)
@@ -152,11 +163,14 @@ class Viewer3D(object):
     if self.q_img is None or self.q_poses is None:
       return
 
-    self.q_img.put(vo.annotate_frames())
     self.q_gt.put(np.array(vo.gt))
     self.q_poses.put(vo.poses)
     if len(vo.errors) > 0:
       self.q_errors.put(vo.errors)
+    if len(vo.posegraph.nodes_optimized) > 1:
+      self.q_poses_optimized.put(vo.posegraph.nodes_optimized)
+    else:
+      self.q_img.put(vo.annotate_frames())
 
   def stop(self):
     self.vt.terminate()

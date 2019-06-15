@@ -9,13 +9,17 @@ import cv2
 import numpy as np
 from frame import Frame
 from viewer import Viewer3D, vt_done
-from utils import getError
+from utils import getError, getTransform
 from params import focal, K
+
+from optimizer import PoseGraph3D
 
 class SimpleVO(object):
   def __init__(self, img, focal, K):
+    self.posegraph = PoseGraph3D(verbose = True)
 
     self.poses = []
+    self.poses.append(np.eye(4))
     self.gt = []
     self.errors = []
     self.gt.append(np.eye(4))
@@ -31,7 +35,7 @@ class SimpleVO(object):
     self.curFrame = Frame(img, self.focal, self.K)
     self.curFrame.match_frames(self.prevFrame)
     self.curFrame.get_essential_matrix(self.prevFrame)
-
+    
 
     #TODO: set scale to 1.0 if there is no gt
     if gt is not None:
@@ -41,6 +45,11 @@ class SimpleVO(object):
     self.curFrame.get_Rt(self.prevFrame, self.scale)
     self.poses.append(self.curFrame.Rt)
     
+    self.posegraph.add_vertex(len(self.poses), self.curFrame.Rt)
+    self.posegraph.add_edge((len(self.poses)-1, len(self.poses)), np.eye(4))#, self.curFrame.Rt_tform)
+
+
+
     if gt is not None:
       error_r, error_t = getError(vo.poses[-1],vo.poses[-2],vo.gt[-1], vo.gt[-2])
 
@@ -90,7 +99,7 @@ if __name__ == "__main__":
     
     if args['<gt>'] is not None:
       gt = np.eye(4)
-      gt[:3, :] = txt[framenum].reshape(3,4)
+      gt[:3, :] = txt[framenum-1].reshape(3,4)
       gt_tform = gt * np.linalg.inv(gt_prev)
 
 
@@ -106,9 +115,10 @@ if __name__ == "__main__":
         error.append((p_tform * np.linalg.inv(gt_tform))[:3, -1])
 
     vo.prevFrame = vo.curFrame
-  
+    
   cap.release()
-  
+  vo.posegraph.optimize()
+  viewer.update(vo)
   vt_done.wait() 
   print("exiting...")
   viewer.stop()

@@ -58,6 +58,13 @@ def match_frames(des1, des2, pt1, pt2):
 def coords_to_kp(coords):
   return [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=15) for f in coords]
 
+def getTransform(cur_pose, prev_pose):
+  """
+  Computes the error of the transformation between 2 poses
+  """
+  tform = prev_pose.dot(np.linalg.inv(cur_pose))
+  return tform
+
 def getError(cur_pose, prev_pose, cur_gt, prev_gt):
   """
   Computes the error of the transformation between 2 poses
