@@ -46,9 +46,12 @@ class SimpleVO(object):
     self.poses.append(self.curFrame.Rt)
     
     self.posegraph.add_vertex(len(self.poses), self.curFrame.Rt)
-    self.posegraph.add_edge((len(self.poses)-1, len(self.poses)), np.eye(4))#, self.curFrame.Rt_tform)
+    self.posegraph.add_edge((len(self.poses)-1, len(self.poses)), getTransform(self.curFrame.Rt, self.prevFrame.Rt))
+    if False: #len(self.poses) > 4:
+            self.posegraph.add_edge((len(self.poses)-2, len(self.poses)), np.eye(4))#self.curFrame.Rt_tform)
+            self.posegraph.add_edge((len(self.poses)-3, len(self.poses)), np.eye(4))#self.curFrame.Rt_tform)
 
-
+    #self.posegraph.optimize(5)
 
     if gt is not None:
       error_r, error_t = getError(vo.poses[-1],vo.poses[-2],vo.gt[-1], vo.gt[-2])
@@ -117,7 +120,8 @@ if __name__ == "__main__":
     vo.prevFrame = vo.curFrame
     
   cap.release()
-  vo.posegraph.optimize()
+  #vo.posegraph.add_edge((1, len(vo.poses)), getTransform(vo.poses[-1], vo.poses[1]))
+  vo.posegraph.optimize(100)
   viewer.update(vo)
   vt_done.wait() 
   print("exiting...")

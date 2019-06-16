@@ -62,8 +62,10 @@ def getTransform(cur_pose, prev_pose):
   """
   Computes the error of the transformation between 2 poses
   """
-  tform = prev_pose.dot(np.linalg.inv(cur_pose))
-  return tform
+  Rt = np.eye(4)
+  Rt[:3,:3] = cur_pose[:3,:3].T @ prev_pose[:3, :3]
+  Rt[:3, -1] = cur_pose[:3, :3].T @ (cur_pose[:3,-1] - prev_pose[:3, -1])
+  return Rt
 
 def getError(cur_pose, prev_pose, cur_gt, prev_gt):
   """
