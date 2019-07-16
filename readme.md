@@ -1,5 +1,5 @@
 # VOpy
-simple visual odometry in python (***now with with pose graph optimization!***)
+simple visual odometry in python ~~(***now with with pose graph optimization!***)~~ [fake news without other measurements] 
 
   to see dead simple VO, check out the vopy_old branch
 
