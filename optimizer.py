@@ -1,6 +1,22 @@
 import g2o
 import numpy as np
 
+def reprojection_error(angles, t, x0, x1):
+    # xEx' = 0
+    # E = RS = R[t]_x
+    # compose Essential Matrix
+    angles = params[0]
+    t = params[1]
+    x0 = params[2]
+    x1 = params[3]
+    R = euler2rot3d(angles)
+    S = np.array([[0., -t[2], t[1]],
+                  [t[2], 0., -t[2]],
+                  [-t[1], t[0], 0.]])
+    E = R @ S
+    # cost
+    return np.concatenate(((x0@ E.T @ x1), (x1@ np.linalg.inv(E).T @ x0)))
+
 class PoseGraph3D(object):
   nodes = []
   edges = []

@@ -85,3 +85,62 @@ def getError(cur_pose, prev_pose, cur_gt, prev_gt):
   error_r = np.sum(np.rad2deg(quaternion.rotation_intrinsic_distance(gt_tform, qt_tform)))
 
   return error_r, error_t
+
+def roll_rot3d(theta):
+  cos = np.cos(theta)
+  sin = np.sin(theta)
+  R_x = np.array([[1, 0, 0],
+                [0,cos, -sin]
+                [0,sin,cos]])
+  return R_x
+def pitch_rot3d(theta):
+  cos = np.cos(theta)
+  sin = np.sin(theta)
+  R_y = np.array([[cos, 0, sin],
+                  [0,   1, 0]
+                  [-sin,0,cos]])
+  return R_y
+
+def yaw_rot3d(theta):
+  cos = np.cos(theta)
+  sin = np.sin(theta)
+  R_z = np.array([[cos, -sin, 0],
+                  [sin,  cos, 0]
+                  [0,      0, 1]])
+  return R_z
+
+def euler2rot3d(angles):
+  return yaw_rot3d(angles[0]) @ pitch_rot3d(angles[1]) @ roll_rot3d(angles[2])
+
+# https://www.learnopencv.com/rotation-matrix-to-euler-angles/
+# Checks if a matrix is a valid rotation matrix.
+def isRMatrix(R) :
+    Rt = np.transpose(R)
+    shouldBeIdentity = np.dot(Rt, R)
+    I = np.identity(3, dtype = R.dtype)
+    n = np.linalg.norm(I - shouldBeIdentity)
+    return n < 1e-6
+ 
+ 
+# Calculates rotation matrix to euler angles
+# The result is the same as MATLAB except the order
+# of the euler angles ( x and z are swapped ).
+def rot2euler(R) :
+ 
+    assert(isRMatrix(R))
+     
+    sy = np.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
+
+     
+    singular = sy < 1e-6
+ 
+    if  not singular :
+        x = np.atan2(R[2,1] , R[2,2])
+        y = np.atan2(-R[2,0], sy)
+        z = np.atan2(R[1,0], R[0,0])
+    else :
+        x = np.atan2(-R[1,2], R[1,1])
+        y = np.atan2(-R[2,0], sy)
+        z = 0
+ 
+    return np.array([x, y, z])
