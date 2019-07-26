@@ -90,14 +90,14 @@ def roll_rot3d(theta):
   cos = np.cos(theta)
   sin = np.sin(theta)
   R_x = np.array([[1, 0, 0],
-                [0,cos, -sin]
+                [0,cos, -sin],
                 [0,sin,cos]])
   return R_x
 def pitch_rot3d(theta):
   cos = np.cos(theta)
   sin = np.sin(theta)
   R_y = np.array([[cos, 0, sin],
-                  [0,   1, 0]
+                  [0,   1, 0],
                   [-sin,0,cos]])
   return R_y
 
@@ -105,12 +105,17 @@ def yaw_rot3d(theta):
   cos = np.cos(theta)
   sin = np.sin(theta)
   R_z = np.array([[cos, -sin, 0],
-                  [sin,  cos, 0]
+                  [sin,  cos, 0],
                   [0,      0, 1]])
   return R_z
 
 def euler2rot3d(angles):
-  return yaw_rot3d(angles[0]) @ pitch_rot3d(angles[1]) @ roll_rot3d(angles[2])
+  """
+  x -> pitch
+  y -> yaw
+  z -> roll
+  """
+  return yaw_rot3d(angles[1]) @ pitch_rot3d(angles[0]) @ roll_rot3d(angles[2])
 
 # https://www.learnopencv.com/rotation-matrix-to-euler-angles/
 # Checks if a matrix is a valid rotation matrix.
@@ -135,12 +140,12 @@ def rot2euler(R) :
     singular = sy < 1e-6
  
     if  not singular :
-        x = np.atan2(R[2,1] , R[2,2])
-        y = np.atan2(-R[2,0], sy)
-        z = np.atan2(R[1,0], R[0,0])
+        x = np.arctan2(R[2,1] , R[2,2])
+        y = np.arctan2(-R[2,0], sy)
+        z = np.arctan2(R[1,0], R[0,0])
     else :
-        x = np.atan2(-R[1,2], R[1,1])
-        y = np.atan2(-R[2,0], sy)
+        x = np.arctan2(-R[1,2], R[1,1])
+        y = np.arctan2(-R[2,0], sy)
         z = 0
  
     return np.array([x, y, z])

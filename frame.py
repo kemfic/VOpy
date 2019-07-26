@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from params import param
 from utils import *
+from optimizer import reprojection_error  
 
 class Frame(object):
   def __init__(self, img, focal=1000., K=None):
@@ -57,11 +58,17 @@ class Frame(object):
   def get_Rt(self, prev, scale=1.0):
     prev_pts = prev.coords[self.des_idxs[:,1]]
     cur_pts = self.coords[self.des_idxs[:,0]]
+    
+    c_pts_norm = cv2.undistortPoints(cur_pts.reshape((1,-1,2)), self.K, distCoeffs=None).squeeze()
+    p_pts_norm = cv2.undistortPoints(prev_pts.reshape((1,-1,2)), self.K, distCoeffs=None).squeeze()
+    
     # Get initial estimate for Rt
     ret, R, t, mask, pts = cv2.recoverPose(self.E, prev_pts, cur_pts, cameraMatrix=self.K, distanceThresh=1000)
-    print(t[-1])
     x,y,z = rot2euler(R)
-    params = 
+    
+    x= (np.sum(reprojection_error([x,y,z], t, p_pts_norm, c_pts_norm)))
+    print(x) 
+    #print(np.rad2deg([x,y,z])) 
     if abs(t[-1]) > 0.001 and np.argmax(np.abs(t)) == 2:
       t = scale*t/t[-1]
       Rt = np.eye(4)
